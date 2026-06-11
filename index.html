@@ -78,6 +78,22 @@
       color:#fff;
       cursor:pointer;
     }
+    .btnRow{
+      display:flex;
+      gap:8px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .startBtn.ghost{
+      background:#eef2ff;
+      color:#111;
+    }
+    @media (prefers-color-scheme: dark){
+      .startBtn.ghost{
+        background:#1f2937;
+        color:#e5e7eb;
+      }
+    }
     /* Rechte Seite: Auszeit-Karte (grün) */
     .sideCard{
       background:var(--card);
@@ -147,7 +163,7 @@
           <!-- Innerer Kreis: kräftig wie Segmente, Farbe je Phase -->
           <circle id="innerFill" cx="110" cy="110" r="72" fill="transparent" opacity="0.92"/>
 
-          <!-- Zentrum: Label (GROSSBUCHSTABEN) + Countdown MM•SS mit gleich großen Punkten -->
+          <!-- Zentrum: Label (GROSSBUCHSTABEN) + Countdown MM•SS -->
           <text id="centerLabel" x="110" y="98" text-anchor="middle" style="font: 800 18px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
             ARBEITSZEIT
           </text>
@@ -170,11 +186,15 @@
 
           <!-- Innenkreis-Ring -->
           <circle cx="110" cy="110" r="72" fill="transparent" stroke="currentColor" stroke-width="2"/>
-          <circle cx="110" cy="110" r="5" fill="currentColor"/>
+          <!-- Mittelpunkt-Punkt entfernt -->
         </svg>
       </div>
 
-      <button id="startBtn" class="startBtn" aria-label="Start">Start</button>
+      <!-- Start + Reset -->
+      <div class="btnRow">
+        <button id="startBtn" class="startBtn" aria-label="Start/Pause">Start</button>
+        <button id="resetBtn" class="startBtn ghost" aria-label="Zurücksetzen auf 30/7">Reset</button>
+      </div>
     </div>
 
     <!-- Rechte Hälfte: Auszeit (grün) einstellen -->
@@ -217,6 +237,7 @@
     const dotTop = document.getElementById('dotTop');
     const dotBottom = document.getElementById('dotBottom');
     const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
     const breakPlus = document.getElementById('breakPlus');
     const breakMinus = document.getElementById('breakMinus');
     const breakBig = document.getElementById('breakBig');
@@ -318,7 +339,7 @@
       return 'done';
     }
 
-    // Einfaches akustisches Signal mit Web Audio (ohne Ein/Aus-Schalter)
+    // Sound beim Phasenwechsel
     let audioCtx = null;
     function getAudioCtx(){
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -344,12 +365,10 @@
       };
 
       if(phase==='break'){
-        // kurzer „aufwärts“-Ton
         tone(660, 0, 0.18, 'sine', 0.26);
         tone(880, 0.12, 0.18, 'sine', 0.22);
         if('vibrate' in navigator) navigator.vibrate([120,90,120]);
       }else if(phase==='done'){
-        // drei kurze Beeps
         tone(740, 0,    0.18, 'triangle', 0.3);
         tone(740, 0.25, 0.18, 'triangle', 0.3);
         tone(740, 0.5,  0.18, 'triangle', 0.3);
@@ -439,6 +458,8 @@
       const elapsed=currentElapsed();
       updateDial(elapsed);
       startBtn.textContent = state.running ? 'Pause' : 'Start';
+      // Reset-Button nur zeigen, wenn Start-Button sichtbar (d.h. nicht laufend)
+      resetBtn.style.display = state.running ? 'none' : 'inline-block';
     }
 
     // Start/Pause/Timer
@@ -489,6 +510,23 @@
         return;
       }
       updateUI();
+    }
+
+    // Reset auf 30 Minuten Gesamt, 7 Minuten Auszeit
+    function hardResetTo30_7(){
+      if(ticker){ clearInterval(ticker); ticker=null; }
+      state.started=false;
+      state.running=false;
+      state.t0=0;
+      state.pausedAcc=0;
+      state.pauseStart=0;
+      state.totalSec = 30*60;   // 30 Minuten Gesamt
+      state.breakSec = 7*60;    // 7 Minuten Auszeit
+      state.workSec  = state.totalSec - state.breakSec; // 23 Minuten Arbeit
+      state.lastPhase = 'work';
+      breakBig.textContent = Math.floor(state.breakSec/60);
+      updateUI();
+      save();
     }
 
     // Drag-Logik: Griffe „kleben“
@@ -597,8 +635,9 @@
     addRepeater(breakPlus, ()=>stepBreak(+1));
     addRepeater(breakMinus, ()=>stepBreak(-1));
 
-    // Start/Pause
+    // Buttons
     startBtn.addEventListener('click', ()=> state.running ? pause() : start());
+    resetBtn.addEventListener('click', hardResetTo30_7);
 
     // Init
     updateUI();
