@@ -102,7 +102,7 @@
       box-shadow:var(--shadow);
       display:grid;
       grid-template-rows:auto 1fr auto;
-      gap:10px;
+      gap:6px; /* näher an das Feld gerückt */
       align-items:center;
       justify-items:center;
     }
@@ -124,7 +124,7 @@
       height:230px;
       border:2px solid #000;
       border-radius:12px;
-      background:#fff;
+      background:var(--green); /* gleiches Grün wie Auszeit-Balken */
       display:grid;
       align-items:center;
       justify-items:center;
@@ -141,7 +141,7 @@
       transform:translate(-50%,-50%);
       font-size:3.6rem;
       font-weight:800;
-      color:#000;
+      color:#fff; /* auf grün gut lesbar */
     }
   </style>
 </head>
@@ -163,7 +163,7 @@
           <!-- Innerer Kreis: kräftig wie Segmente, Farbe je Phase -->
           <circle id="innerFill" cx="110" cy="110" r="72" fill="transparent" opacity="0.92"/>
 
-          <!-- Zentrum: Label (GROSSBUCHSTABEN) + Countdown MM•SS -->
+          <!-- Zentrum: Label + Countdown MM:SS -->
           <text id="centerLabel" x="110" y="98" text-anchor="middle" style="font: 800 18px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
             ARBEITSZEIT
           </text>
@@ -172,13 +172,13 @@
           <text id="centerMin" x="100" y="126" text-anchor="end" style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">
             00
           </text>
+          <!-- Doppelpunkt exakt auf gleicher Höhe -->
+          <text id="centerColon" x="110" y="126" text-anchor="middle" style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff;">
+            :
+          </text>
           <text id="centerSec" x="120" y="126" text-anchor="start" style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">
             00
           </text>
-
-          <!-- „Doppelpunkt“ als zwei gleich große Punkte -->
-          <circle id="dotTop" cx="110" cy="120" r="3" fill="#fff"/>
-          <circle id="dotBottom" cx="110" cy="132" r="3" fill="#fff"/>
 
           <!-- Griffe: schwarz = Ende GRÜN (Grenze), blau = Ende Gesamt -->
           <circle id="handleBoundary" r="10" fill="var(--black)" stroke="#fff" stroke-width="3" style="display:none" />
@@ -233,9 +233,8 @@
     const handleTotal = document.getElementById('handleTotal');       // blauer Griff = Ende Gesamt
     const centerLabel = document.getElementById('centerLabel');
     const centerMin = document.getElementById('centerMin');
+    const centerColon = document.getElementById('centerColon');
     const centerSec = document.getElementById('centerSec');
-    const dotTop = document.getElementById('dotTop');
-    const dotBottom = document.getElementById('dotBottom');
     const startBtn = document.getElementById('startBtn');
     const resetBtn = document.getElementById('resetBtn');
     const breakPlus = document.getElementById('breakPlus');
@@ -412,8 +411,7 @@
         centerSec.textContent = ss;
         centerMin.setAttribute('fill', '#fff');
         centerSec.setAttribute('fill', '#fff');
-        dotTop.setAttribute('fill', '#fff');
-        dotBottom.setAttribute('fill', '#fff');
+        centerColon.setAttribute('fill', '#fff');
       } else if (remGreenSec > 0) { // AUSZEIT
         innerFill.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--green') || '#16a34a');
         centerLabel.textContent = 'AUSZEIT';
@@ -422,8 +420,7 @@
         centerSec.textContent = ss;
         centerMin.setAttribute('fill', '#fff');
         centerSec.setAttribute('fill', '#fff');
-        dotTop.setAttribute('fill', '#fff');
-        dotBottom.setAttribute('fill', '#fff');
+        centerColon.setAttribute('fill', '#fff');
       } else { // FERTIG
         innerFill.setAttribute('fill', 'transparent');
         centerLabel.textContent = 'FERTIG';
@@ -431,8 +428,7 @@
         centerSec.textContent = '00';
         centerMin.setAttribute('fill', 'var(--fg-soft)');
         centerSec.setAttribute('fill', 'var(--fg-soft)');
-        dotTop.setAttribute('fill', 'var(--fg-soft)');
-        dotBottom.setAttribute('fill', 'var(--fg-soft)');
+        centerColon.setAttribute('fill', 'var(--fg-soft)');
       }
 
       // Griffe sichtbar, wenn nicht laufend (vor Start oder Pause)
